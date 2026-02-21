@@ -1,0 +1,9 @@
+{
+  "extraPaths": [
+    "src"
+  ],
+  "venvPath": ".tox",
+  "venv": "type",
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic",
+}

@@ -1,0 +1,36 @@
+name: api-coverage
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api-coverage-sync:
+    name: api-coverage-sync
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy==2.4.2 mlx==0.30.6
+          python -m pip install -e . --no-deps
+
+      - name: Check API_COVERAGE.md is up to date
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=src python scripts/generate_api_coverage.py | diff -u API_COVERAGE.md -

@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mumpy"
+dynamic = ["version"]
+description = "A NumPy-like wrapper around MLX"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = ["mlx", "numpy"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.9"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = { attr = "mumpy._version.__version__" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["ALL"]
+# Repo-level policy/parity choices: keep these centralized to avoid file-level clutter.
+ignore = [
+    "A001",
+    "A002",
+    "ANN001",
+    "ANN201",
+    "ANN202",
+    "ANN401",
+    "C901",
+    "D103",
+    "FBT001",
+    "FBT002",
+    "N803",
+    "PLE0605",
+    "PLR0911",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+    "PLR2004",
+    "RUF005",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["S101"]
+"tests/test_api_surface_exports.py" = ["S102"]
+"tests/test_export_boundary_conventions.py" = ["S102"]
+"scripts/benchmark_mumpy.py" = ["PLC0415"]
+"src/mumpy/_bridge.py" = ["PLC0415"]
+"src/mumpy/fallbacks/_fallbacks.py" = ["TID252"]
+"src/mumpy/fft/_fft.py" = ["TID252"]
+"src/mumpy/linalg/_linalg.py" = ["SLF001", "TID252"]
+"src/mumpy/random/_random.py" = ["SLF001", "TID252"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
