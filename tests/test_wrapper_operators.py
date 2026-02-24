@@ -59,3 +59,8 @@ def test_float64_wrapper_elementwise_ops_route_when_needed() -> None:
     assert isinstance(sinx, mp.MumPyArray)
     assert sinx.dtype == mp.float64
     assert_allclose(sinx, np.sin(np.asarray(x)), rtol=1e-6, atol=1e-6)
+
+    clipped_low = mp.maximum(x, 0.0)
+    assert isinstance(clipped_low, mp.MumPyArray)
+    assert clipped_low.dtype == mp.float64
+    assert_allclose(clipped_low, np.maximum(np.asarray(x), 0.0), rtol=0.0, atol=0.0)

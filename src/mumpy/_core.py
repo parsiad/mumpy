@@ -2007,11 +2007,11 @@ def fix(x: Any) -> mx.array:
 
 
 def maximum(x1: Any, x2: Any) -> mx.array:
-    return mx.maximum(_asarray(x1), _asarray(x2))
+    return _binary_elementwise_op(x1, x2, mx.maximum)
 
 
 def minimum(x1: Any, x2: Any) -> mx.array:
-    return mx.minimum(_asarray(x1), _asarray(x2))
+    return _binary_elementwise_op(x1, x2, mx.minimum)
 
 
 def fmax(x1: Any, x2: Any) -> mx.array:
