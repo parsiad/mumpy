@@ -1,5 +1,7 @@
 """Array method parity checks against top-level MumPy functions."""
 
+from typing import cast
+
 import numpy as np
 
 import mumpy as mp
@@ -54,3 +56,22 @@ def test_float64_shape_methods_route_when_needed() -> None:
     assert transposed.dtype == mp.float64
     assert transposed.shape == (1, 256)
     assert_allclose(transposed, np.asarray(x).transpose(), rtol=0.0, atol=0.0)
+
+
+def test_view_matches_numpy_semantics() -> None:
+    x = cast("mp.MumPyArray", mp.random.randn(32))
+
+    same_view = x.view()
+    assert isinstance(same_view, mp.MumPyArray)
+    assert same_view is not x
+    assert same_view.mx is x.mx
+    assert same_view.dtype == x.dtype
+    assert same_view.shape == x.shape
+    assert_array_equal(same_view, np.asarray(x))
+
+    float32_view = x.view(mp.float32)
+    expected = np.asarray(x).view(np.float32)
+    assert isinstance(float32_view, mp.MumPyArray)
+    assert float32_view.dtype == mp.float32
+    assert float32_view.shape == expected.shape
+    assert_array_equal(float32_view, expected)

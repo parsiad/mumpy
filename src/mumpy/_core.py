@@ -750,6 +750,18 @@ def astype(a: Any, dtype: Any, copy: bool = True) -> mx.array:
         return arr.astype(dtype_)
 
 
+def view(a: Any, dtype: Any | None = None, type: Any | None = None) -> mx.array:
+    if type is not None:
+        msg = "view(type=...) is not supported; MumPy does not support ndarray subclass views"
+        raise NotImplementedError(msg)
+    arr = a if isinstance(a, mx.array) else _asarray(a)
+    dtype_ = _resolve_dtype(dtype)
+    if dtype_ is None or dtype_ == arr.dtype:
+        return arr
+    with _cpu_default_device_for_dtypes(arr.dtype, dtype_):
+        return arr.view(dtype_)
+
+
 def zeros(shape: Any, dtype: Any | None = None) -> mx.array:
     out_dtype = _resolve_dtype(dtype) or _NUMPY_DEFAULT_FLOAT_DTYPE
     with _cpu_default_device_for_dtype(out_dtype):
@@ -4465,6 +4477,7 @@ __all__ = [
     "unravel_index",
     "var",
     "vdot",
+    "view",
     "vsplit",
     "vstack",
     "where",

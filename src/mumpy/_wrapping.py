@@ -324,6 +324,9 @@ class MumPyArray(_MumPyValueBase):
         newshape = shape[0] if len(shape) == 1 and isinstance(shape[0], (tuple, list)) else tuple(shape)
         return _call_mumpy_function("reshape", self, newshape, order=order)
 
+    def view(self, dtype: Any | None = None, type: Any | None = None) -> Any:
+        return _call_mumpy_function("view", self, dtype=dtype, type=type)
+
     def transpose(self, *axes: Any) -> Any:
         if not axes:
             axes_arg = None

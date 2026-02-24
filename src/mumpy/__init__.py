@@ -38,6 +38,7 @@ _CORE_EXPORTS = (
     "ascontiguousarray",
     "copy",
     "astype",
+    "view",
     "zeros",
     "ones",
     "full",
