@@ -41,3 +41,21 @@ def test_matrix_multiply_and_scalar_ops() -> None:
     out = s + 5
     assert isinstance(out, mp.MumPyScalar)
     assert out.item() == 11
+
+
+def test_float64_wrapper_elementwise_ops_route_when_needed() -> None:
+    x = mp.random.randn(128)
+
+    prod = 0.0 * x
+    assert isinstance(prod, mp.MumPyArray)
+    assert prod.dtype == mp.float64
+    assert_allclose(prod, np.zeros(128, dtype=np.float64), rtol=0.0, atol=0.0)
+
+    eq = x == mp.copy(x)
+    assert isinstance(eq, mp.MumPyArray)
+    assert_array_equal(eq, np.ones(128, dtype=bool))
+
+    sinx = mp.sin(x)
+    assert isinstance(sinx, mp.MumPyArray)
+    assert sinx.dtype == mp.float64
+    assert_allclose(sinx, np.sin(np.asarray(x)), rtol=1e-6, atol=1e-6)
