@@ -253,6 +253,23 @@ def _binary_elementwise_op(x1: Any, x2: Any, op: Any) -> mx.array:
         return op(a, b)
 
 
+def _single_array_transform_op(
+    a: Any,
+    op: Any,
+    *args: Any,
+    extra_dtypes: Sequence[Any | None] = (),
+    **kwargs: Any,
+) -> mx.array:
+    arr = _asarray(a)
+    with _cpu_default_device_for_dtypes(arr.dtype, *extra_dtypes):
+        return op(arr, *args, **kwargs)
+
+
+def _sequence_array_transform_op(arrays: Sequence[mx.array], op: Any, *args: Any, **kwargs: Any) -> mx.array:
+    with _cpu_default_device_for_dtypes(*(arr.dtype for arr in arrays)):
+        return op(arrays, *args, **kwargs)
+
+
 def _infer_default_dtype_from_python_sequence(obj: Any) -> Any | None:
     has_bool = False
     has_int = False
@@ -716,7 +733,9 @@ def asarray_chkfinite(a: Any, dtype: Any | None = None, order: str | None = None
 def copy(a: Any) -> mx.array:
     # MLX arrays are immutable, but NumPy exposes a copy helper; re-materializing
     # the array preserves the expectation of a new object.
-    return mx.array(_asarray(a))
+    arr = _asarray(a)
+    with _cpu_default_device_for_dtype(arr.dtype):
+        return mx.array(arr)
 
 
 def astype(a: Any, dtype: Any, copy: bool = True) -> mx.array:
@@ -976,11 +995,11 @@ def reshape(a: Any, newshape: Any, order: str = "C") -> mx.array:
         np_mod = _numpy()
         result = np_mod.reshape(np_mod.asarray(a), _normalize_shape_arg(newshape), order=cast("Any", order))
         return mx.array(result)
-    return mx.reshape(_asarray(a), _normalize_shape_arg(newshape))
+    return _single_array_transform_op(a, mx.reshape, _normalize_shape_arg(newshape))
 
 
 def transpose(a: Any, axes: Sequence[int] | None = None) -> mx.array:
-    return mx.transpose(_asarray(a), axes=axes)
+    return _single_array_transform_op(a, mx.transpose, axes=axes)
 
 
 def matrix_transpose(x: Any) -> mx.array:
@@ -994,17 +1013,18 @@ def matrix_transpose(x: Any) -> mx.array:
 
 
 def permute_dims(a: Any, axes: Sequence[int] | None = None) -> mx.array:
-    return mx.permute_dims(_asarray(a), axes=axes)
+    return _single_array_transform_op(a, mx.permute_dims, axes=axes)
 
 
 def swapaxes(a: Any, axis1: int, axis2: int) -> mx.array:
-    return mx.swapaxes(_asarray(a), axis1, axis2)
+    return _single_array_transform_op(a, mx.swapaxes, axis1, axis2)
 
 
 def moveaxis(a: Any, source: int | Sequence[int], destination: int | Sequence[int]) -> mx.array:
     arr = _asarray(a)
     if isinstance(source, int) and isinstance(destination, int):
-        return mx.moveaxis(arr, source, destination)
+        with _cpu_default_device_for_dtype(arr.dtype):
+            return mx.moveaxis(arr, source, destination)
     if isinstance(source, int) or isinstance(destination, int):
         msg = "source and destination must both be integers or both be sequences"
         raise TypeError(msg)
@@ -1035,7 +1055,8 @@ def rollaxis(a: Any, axis: int, start: int = 0) -> mx.array:
 def expand_dims(a: Any, axis: int | Sequence[int]) -> mx.array:
     arr = _asarray(a)
     if isinstance(axis, int):
-        return mx.expand_dims(arr, axis)
+        with _cpu_default_device_for_dtype(arr.dtype):
+            return mx.expand_dims(arr, axis)
     out = arr
     ndim_target = arr.ndim + len(axis)
     normalized = []
@@ -1045,13 +1066,14 @@ def expand_dims(a: Any, axis: int | Sequence[int]) -> mx.array:
             msg = "axis out of bounds"
             raise ValueError(msg)
         normalized.append(pos)
-    for ax in sorted(normalized):
-        out = mx.expand_dims(out, ax)
+    with _cpu_default_device_for_dtype(arr.dtype):
+        for ax in sorted(normalized):
+            out = mx.expand_dims(out, ax)
     return out
 
 
 def squeeze(a: Any, axis: int | Sequence[int] | None = None) -> mx.array:
-    return mx.squeeze(_asarray(a), axis=axis)
+    return _single_array_transform_op(a, mx.squeeze, axis=axis)
 
 
 def flatten(a: Any, order: str = "C") -> mx.array:
@@ -1060,7 +1082,7 @@ def flatten(a: Any, order: str = "C") -> mx.array:
         bridge.record_fallback(f"core.flatten:order_{order}")
         np_mod = _numpy()
         return mx.array(np_mod.asarray(a).flatten(order=cast("Any", order)))
-    return mx.flatten(_asarray(a))
+    return _single_array_transform_op(a, mx.flatten)
 
 
 def ravel(a: Any, order: str = "C") -> mx.array:
@@ -1130,7 +1152,7 @@ def concatenate(arrays: Sequence[Any], axis: int | None = 0, dtype: Any | None =
     if axis is None:
         converted = [flatten(a) for a in converted]
         axis = 0
-    return mx.concatenate(converted, axis=axis)
+    return _sequence_array_transform_op(converted, mx.concatenate, axis=axis)
 
 
 def stack(arrays: Sequence[Any], axis: int = 0, dtype: Any | None = None) -> mx.array:
@@ -1138,7 +1160,7 @@ def stack(arrays: Sequence[Any], axis: int = 0, dtype: Any | None = None) -> mx.
         msg = "need at least one array to stack"
         raise ValueError(msg)
     converted: list[mx.array] = [_asarray(a, dtype_=dtype) if dtype is not None else _asarray(a) for a in arrays]
-    return mx.stack(converted, axis=axis)
+    return _sequence_array_transform_op(converted, mx.stack, axis=axis)
 
 
 def hstack(tup: Sequence[Any]) -> mx.array:
@@ -1331,7 +1353,9 @@ def delete(arr: Any, obj: Any, axis: int | None = None) -> mx.array:
 
 
 def split(ary: Any, indices_or_sections: int | Sequence[int], axis: int = 0) -> list[mx.array]:
-    return list(mx.split(_asarray(ary), indices_or_sections, axis=axis))
+    arr = _asarray(ary)
+    with _cpu_default_device_for_dtype(arr.dtype):
+        return list(mx.split(arr, indices_or_sections, axis=axis))
 
 
 def array_split(ary: Any, indices_or_sections: int | Sequence[int], axis: int = 0) -> list[mx.array]:
@@ -1368,11 +1392,13 @@ def dsplit(ary: Any, indices_or_sections: int | Sequence[int]) -> list[mx.array]
 
 
 def broadcast_to(a: Any, shape: Sequence[int]) -> mx.array:
-    return mx.broadcast_to(_asarray(a), shape)
+    return _single_array_transform_op(a, mx.broadcast_to, shape)
 
 
 def broadcast_arrays(*args: Any) -> list[mx.array]:
-    return list(mx.broadcast_arrays(*[_asarray(a) for a in args]))
+    arrays = [_asarray(a) for a in args]
+    with _cpu_default_device_for_dtypes(*(arr.dtype for arr in arrays)):
+        return list(mx.broadcast_arrays(*arrays))
 
 
 def broadcast_shapes(*args: Sequence[int]) -> tuple[int, ...]:
@@ -1380,20 +1406,26 @@ def broadcast_shapes(*args: Sequence[int]) -> tuple[int, ...]:
 
 
 def take(a: Any, indices: Any, axis: int | None = None) -> mx.array:
+    arr = _asarray(a)
     idx = indices if isinstance(indices, int) else _asarray(indices)
-    return mx.take(_asarray(a), idx, axis=axis)
+    extra_dtypes = () if isinstance(idx, int) else (idx.dtype,)
+    with _cpu_default_device_for_dtypes(arr.dtype, *extra_dtypes):
+        return mx.take(arr, idx, axis=axis)
 
 
 def take_along_axis(arr: Any, indices: Any, axis: int) -> mx.array:
-    return mx.take_along_axis(_asarray(arr), _asarray(indices), axis)
+    arr_mx = _asarray(arr)
+    idx = _asarray(indices)
+    with _cpu_default_device_for_dtypes(arr_mx.dtype, idx.dtype):
+        return mx.take_along_axis(arr_mx, idx, axis)
 
 
 def repeat(a: Any, repeats: int, axis: int | None = None) -> mx.array:
-    return mx.repeat(_asarray(a), repeats, axis=axis)
+    return _single_array_transform_op(a, mx.repeat, repeats, axis=axis)
 
 
 def tile(a: Any, reps: int | Sequence[int]) -> mx.array:
-    return mx.tile(_asarray(a), reps)
+    return _single_array_transform_op(a, mx.tile, reps)
 
 
 def concat(arrays: Sequence[Any], axis: int = 0) -> mx.array:
@@ -1401,9 +1433,16 @@ def concat(arrays: Sequence[Any], axis: int = 0) -> mx.array:
 
 
 def where(condition: Any, x: Any, y: Any) -> mx.array:
+    cond = _asarray(condition)
     x_val = x if isscalar(x) else _asarray(x)
     y_val = y if isscalar(y) else _asarray(y)
-    return mx.where(_asarray(condition), x_val, y_val)
+    dtypes = [cond.dtype]
+    if isinstance(x_val, mx.array):
+        dtypes.append(x_val.dtype)
+    if isinstance(y_val, mx.array):
+        dtypes.append(y_val.dtype)
+    with _cpu_default_device_for_dtypes(*dtypes):
+        return mx.where(cond, x_val, y_val)
 
 
 def choose(a: Any, choices: Sequence[Any], out: None = None, mode: str = "raise") -> mx.array:
@@ -1519,7 +1558,7 @@ def piecewise(x: Any, condlist: Sequence[Any], funclist: Sequence[Any], *args: A
 
 
 def clip(a: Any, a_min: Any, a_max: Any) -> mx.array:
-    return mx.clip(_asarray(a), a_min, a_max)
+    return _single_array_transform_op(a, mx.clip, a_min, a_max)
 
 
 def _pad_width_scalar(value: Any) -> int | None:
@@ -1622,7 +1661,9 @@ def pad(
     if mode_key in {"constant", "edge"}:
         constant_values = kwargs.pop("constant_values", 0)
         if not kwargs:
-            return mx.pad(_asarray(array), pad_width, mode=mode_key, constant_values=constant_values)
+            arr = _asarray(array)
+            with _cpu_default_device_for_dtype(arr.dtype):
+                return mx.pad(arr, pad_width, mode=mode_key, constant_values=constant_values)
         kwargs["constant_values"] = constant_values
     elif mode_key in {"reflect", "symmetric"}:
         reflect_type = kwargs.pop("reflect_type", "even")
@@ -1642,7 +1683,7 @@ def pad(
 
 def roll(a: Any, shift: int | Sequence[int], axis: int | Sequence[int] | None = None) -> mx.array:
     shift_arg, axis_arg = _normalize_roll_args(shift, axis)
-    return mx.roll(_asarray(a), cast("Any", shift_arg), cast("Any", axis_arg))
+    return _single_array_transform_op(a, mx.roll, cast("Any", shift_arg), cast("Any", axis_arg))
 
 
 def flip(m: Any, axis: int | Sequence[int] | None = None) -> mx.array:
@@ -1693,7 +1734,7 @@ def rot90(m: Any, k: int = 1, axes: tuple[int, int] = (0, 1)) -> mx.array:
 
 
 def diagonal(a: Any, offset: int = 0, axis1: int = 0, axis2: int = 1) -> mx.array:
-    return mx.diagonal(_asarray(a), offset=offset, axis1=axis1, axis2=axis2)
+    return _single_array_transform_op(a, mx.diagonal, offset=offset, axis1=axis1, axis2=axis2)
 
 
 def trace(a: Any, offset: int = 0, axis1: int = 0, axis2: int = 1, dtype: Any | None = None) -> mx.array:
@@ -1704,11 +1745,11 @@ def trace(a: Any, offset: int = 0, axis1: int = 0, axis2: int = 1, dtype: Any | 
 
 
 def tril(m: Any, k: int = 0) -> mx.array:
-    return mx.tril(_asarray(m), k)
+    return _single_array_transform_op(m, mx.tril, k)
 
 
 def triu(m: Any, k: int = 0) -> mx.array:
-    return mx.triu(_asarray(m), k)
+    return _single_array_transform_op(m, mx.triu, k)
 
 
 def add(x1: Any, x2: Any) -> mx.array:
