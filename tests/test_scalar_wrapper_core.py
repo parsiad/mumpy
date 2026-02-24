@@ -25,6 +25,23 @@ def test_scalar_wrapper_numeric_conversions_and_hash() -> None:
     assert hash(s) == hash(3)
 
 
+def test_scalar_wrapper_supports_index_for_integer_dtypes() -> None:
+    s = MumPyScalar(mp.array(2, dtype=mp.int32))
+
+    assert s.__index__() == 2
+    assert [10, 20, 30][s] == 30
+
+
+def test_scalar_wrapper_index_rejects_non_integer_dtypes() -> None:
+    s_float = MumPyScalar(mp.array(2.0, dtype=mp.float32))
+    with pytest.raises(TypeError, match="cannot be interpreted as an integer index"):
+        _ = s_float.__index__()
+
+    s_bool = MumPyScalar(mp.zeros((), dtype=mp.bool_) + 1)
+    with pytest.raises(TypeError, match="cannot be interpreted as an integer index"):
+        _ = s_bool.__index__()
+
+
 def test_scalar_wrapper_rejects_non_scalar_array() -> None:
     with pytest.raises(TypeError, match="scalar"):
         MumPyScalar(mp.array([1, 2, 3]))

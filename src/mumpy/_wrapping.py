@@ -379,6 +379,12 @@ class MumPyScalar(_MumPyValueBase):
     def __int__(self) -> int:
         return int(self._mx.item())
 
+    def __index__(self) -> int:
+        if self.dtype in {mx.int8, mx.int16, mx.int32, mx.int64, mx.uint8, mx.uint16, mx.uint32, mx.uint64}:
+            return int(self._mx.item())
+        msg = f"{self.dtype} cannot be interpreted as an integer index"
+        raise TypeError(msg)
+
     def __float__(self) -> float:
         return float(self._mx.item())
 
