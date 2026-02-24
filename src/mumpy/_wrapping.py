@@ -241,14 +241,21 @@ class _MumPyValueBase:
         return self._mx.__dlpack_device__()
 
     def __iter__(self) -> Iterator[Any]:
-        for v in self._mx:
-            yield wrap_public_result(v)
+        from . import _core as core  # noqa: PLC0415
+
+        with core._cpu_default_device_for_dtype(self._mx.dtype):
+            for v in self._mx:
+                yield wrap_public_result(v)
 
     def __len__(self) -> int:
         return len(self._mx)
 
     def __getitem__(self, key: Any) -> Any:
-        result = self._mx[unwrap_public_input(key)]
+        from . import _core as core  # noqa: PLC0415
+
+        normalized_key = unwrap_public_input(key)
+        with core._cpu_default_device_for_dtype(self._mx.dtype):
+            result = self._mx[normalized_key]
         if isinstance(result, _RAW_ARRAY_TYPE) and result.ndim == 0:
             return MumPyScalar(result)
         return wrap_public_result(result)

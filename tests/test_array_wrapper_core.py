@@ -1,5 +1,7 @@
 """Core behavior tests for ``MumPyArray``."""
 
+from typing import cast
+
 import pytest
 
 import mumpy as mp
@@ -40,6 +42,29 @@ def test_array_wrapper_iter_yields_wrapped_values() -> None:
     assert all(isinstance(row, mp.MumPyArray) for row in rows)
     assert_array_equal(rows[0], [0, 1, 2])
     assert_array_equal(rows[1], [3, 4, 5])
+
+
+def test_float64_wrapper_indexing_and_iteration_route_when_needed() -> None:
+    x = cast("mp.MumPyArray", mp.arange(12, dtype=mp.float64).reshape(3, 4))
+
+    scalar = x[0, 1]
+    assert isinstance(scalar, mp.MumPyScalar)
+    assert scalar.item() == 1.0
+
+    row = x[1]
+    assert isinstance(row, mp.MumPyArray)
+    assert row.dtype == mp.float64
+    assert_array_equal(row, [4.0, 5.0, 6.0, 7.0])
+
+    fancy = x[[0, 2], [1, 3]]
+    assert isinstance(fancy, mp.MumPyArray)
+    assert fancy.dtype == mp.float64
+    assert_array_equal(fancy, [1.0, 11.0])
+
+    rows = list(iter(x))
+    assert len(rows) == 3
+    assert all(isinstance(v, mp.MumPyArray) for v in rows)
+    assert_array_equal(rows[0], [0.0, 1.0, 2.0, 3.0])
 
 
 def test_array_wrapper_truthiness_matches_numpy_style() -> None:
