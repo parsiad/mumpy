@@ -2302,7 +2302,7 @@ def var(
 
 
 def median(a: Any, axis: int | Sequence[int] | None = None, keepdims: bool = False) -> mx.array:
-    return mx.median(_asarray(a), axis=axis, keepdims=keepdims)
+    return _single_array_transform_op(a, mx.median, axis=axis, keepdims=keepdims)
 
 
 def _quantile_prepare_rows(
@@ -2801,11 +2801,11 @@ def corrcoef(
 
 
 def min(a: Any, axis: int | Sequence[int] | None = None, keepdims: bool = False) -> mx.array:
-    return mx.min(_asarray(a), axis=axis, keepdims=keepdims)
+    return _single_array_transform_op(a, mx.min, axis=axis, keepdims=keepdims)
 
 
 def max(a: Any, axis: int | Sequence[int] | None = None, keepdims: bool = False) -> mx.array:
-    return mx.max(_asarray(a), axis=axis, keepdims=keepdims)
+    return _single_array_transform_op(a, mx.max, axis=axis, keepdims=keepdims)
 
 
 def amin(a: Any, axis: int | Sequence[int] | None = None, keepdims: bool = False) -> mx.array:
@@ -2848,15 +2848,15 @@ def nanmax(a: Any, axis: int | Sequence[int] | None = None, keepdims: bool = Fal
 
 def ptp(a: Any, axis: int | Sequence[int] | None = None, keepdims: bool = False) -> mx.array:
     arr = _asarray(a)
-    return mx.max(arr, axis=axis, keepdims=keepdims) - mx.min(arr, axis=axis, keepdims=keepdims)
+    return max(arr, axis=axis, keepdims=keepdims) - min(arr, axis=axis, keepdims=keepdims)
 
 
 def argmin(a: Any, axis: int | None = None, keepdims: bool = False) -> mx.array:
-    return mx.argmin(_asarray(a), axis=axis, keepdims=keepdims)
+    return _single_array_transform_op(a, mx.argmin, axis=axis, keepdims=keepdims)
 
 
 def argmax(a: Any, axis: int | None = None, keepdims: bool = False) -> mx.array:
-    return mx.argmax(_asarray(a), axis=axis, keepdims=keepdims)
+    return _single_array_transform_op(a, mx.argmax, axis=axis, keepdims=keepdims)
 
 
 def nanargmin(a: Any, axis: int | None = None) -> mx.array:
@@ -2878,11 +2878,11 @@ def nanargmax(a: Any, axis: int | None = None) -> mx.array:
 
 
 def all(a: Any, axis: int | Sequence[int] | None = None, keepdims: bool = False) -> mx.array:
-    return mx.all(_asarray(a), axis=axis, keepdims=keepdims)
+    return _single_array_transform_op(a, mx.all, axis=axis, keepdims=keepdims)
 
 
 def any(a: Any, axis: int | Sequence[int] | None = None, keepdims: bool = False) -> mx.array:
-    return mx.any(_asarray(a), axis=axis, keepdims=keepdims)
+    return _single_array_transform_op(a, mx.any, axis=axis, keepdims=keepdims)
 
 
 def count_nonzero(a: Any, axis: int | Sequence[int] | None = None, keepdims: bool = False) -> mx.array:

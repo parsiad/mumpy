@@ -58,6 +58,27 @@ def test_float64_shape_methods_route_when_needed() -> None:
     assert_allclose(transposed, np.asarray(x).transpose(), rtol=0.0, atol=0.0)
 
 
+def test_float64_reduction_methods_route_when_needed() -> None:
+    x = cast("mp.MumPyArray", mp.random.randn(100, 10))
+
+    maxed = x.max(axis=0)
+    assert isinstance(maxed, mp.MumPyArray)
+    assert maxed.dtype == mp.float64
+    assert maxed.shape == (10,)
+    assert_allclose(maxed, np.asarray(x).max(axis=0), rtol=0.0, atol=0.0)
+
+    mined = x.min(axis=0)
+    assert isinstance(mined, mp.MumPyArray)
+    assert mined.dtype == mp.float64
+    assert mined.shape == (10,)
+    assert_allclose(mined, np.asarray(x).min(axis=0), rtol=0.0, atol=0.0)
+
+    argmaxed = x.argmax(axis=0)
+    assert isinstance(argmaxed, mp.MumPyArray)
+    assert argmaxed.shape == (10,)
+    assert_array_equal(argmaxed, np.asarray(x).argmax(axis=0))
+
+
 def test_view_matches_numpy_semantics() -> None:
     x = cast("mp.MumPyArray", mp.random.randn(32))
 
