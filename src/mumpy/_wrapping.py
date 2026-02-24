@@ -245,7 +245,10 @@ class _MumPyValueBase:
 
         with core._cpu_default_device_for_dtype(self._mx.dtype):
             for v in self._mx:
-                yield wrap_public_result(v)
+                if isinstance(v, _RAW_ARRAY_TYPE) and v.ndim == 0:
+                    yield MumPyScalar(v)
+                else:
+                    yield wrap_public_result(v)
 
     def __len__(self) -> int:
         return len(self._mx)

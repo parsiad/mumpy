@@ -44,6 +44,24 @@ def test_array_wrapper_iter_yields_wrapped_values() -> None:
     assert_array_equal(rows[1], [3, 4, 5])
 
 
+def test_array_wrapper_iter_yields_scalars_for_1d_arrays() -> None:
+    x = mp.arange(5)
+    values = list(iter(x))
+
+    assert len(values) == 5
+    assert all(isinstance(v, mp.MumPyScalar) for v in values)
+    assert [v.item() for v in values] == [0, 1, 2, 3, 4]
+
+
+def test_permutation_iteration_yields_scalars() -> None:
+    x = mp.random.permutation(mp.arange(10))
+    values = list(iter(x))
+
+    assert len(values) == 10
+    assert all(isinstance(v, mp.MumPyScalar) for v in values)
+    assert sorted(int(v.item()) for v in values) == list(range(10))
+
+
 def test_float64_wrapper_indexing_and_iteration_route_when_needed() -> None:
     x = cast("mp.MumPyArray", mp.arange(12, dtype=mp.float64).reshape(3, 4))
 
