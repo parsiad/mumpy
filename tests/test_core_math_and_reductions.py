@@ -387,3 +387,15 @@ def test_additional_core_default_dtype_parity_for_cumulatives_histogram_and_indi
         _dtype_name(mp.ravel_multi_index(([1, 0], [0, 1]), (2, 2)))
         == np.ravel_multi_index(([1, 0], [0, 1]), (2, 2)).dtype.name
     )
+
+
+def test_out_none_is_accepted_for_ufunc_style_core_functions() -> None:
+    x = mp.array([1.0, 2.0, 4.0], dtype=mp.float64)
+    y = mp.array([2.0, 4.0, 8.0], dtype=mp.float64)
+
+    assert_allclose(mp.add(x, y, out=None), np.add(np.asarray(x), np.asarray(y)))
+    assert_allclose(mp.divide(y, x, out=None), np.divide(np.asarray(y), np.asarray(x)))
+    assert_allclose(mp.sin(x, out=None), np.sin(np.asarray(x)))
+
+    with pytest.raises(TypeError, match="out=None"):
+        mp.divide(y, x, out=mp.zeros_like(x))

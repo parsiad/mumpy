@@ -1,6 +1,7 @@
 """NumPy protocol interop for MumPy wrappers."""
 
 import numpy as np
+import pytest
 
 import mumpy as mp
 
@@ -40,3 +41,15 @@ def test_numpy_array_function_paths_return_wrapped_results() -> None:
     assert_allclose(got_sum, 10.0, rtol=0, atol=0)
     assert_allclose(got_mean, 2.5, rtol=0, atol=0)
     assert_array_equal(got_reshaped, [[1.0, 2.0], [3.0, 4.0]])
+
+
+def test_numpy_ufuncs_allow_out_none_but_reject_real_out_buffers() -> None:
+    x = mp.array([1.0, 2.0, 3.0])
+
+    out_none = np.add(x, 1.5, out=None)
+
+    assert isinstance(out_none, mp.MumPyArray)
+    assert_allclose(out_none, [2.5, 3.5, 4.5], rtol=1e-6, atol=1e-6)
+
+    with pytest.raises(TypeError):
+        np.add(x, 1.5, out=np.empty(3, dtype=np.float64))

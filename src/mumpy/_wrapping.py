@@ -285,7 +285,12 @@ class _MumPyValueBase:
 
     def __array_ufunc__(self, ufunc: Any, method: str, *inputs: Any, **kwargs: Any) -> Any:
         if "out" in kwargs:
-            return NotImplemented
+            out = kwargs["out"]
+            if out is None or (isinstance(out, tuple) and all(v is None for v in out)):
+                kwargs = dict(kwargs)
+                del kwargs["out"]
+            else:
+                return NotImplemented
         from . import _bridge as bridge  # noqa: PLC0415
 
         coerced_inputs, coerced_kwargs = _coerce_numpy_protocol_args_kwargs(bridge, inputs, kwargs)

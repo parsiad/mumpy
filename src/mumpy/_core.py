@@ -240,13 +240,22 @@ def _cpu_default_device_for_dtypes(*dtypes: Any | None):
         mx.set_default_device(previous)
 
 
-def _unary_elementwise_op(x: Any, op: Any) -> mx.array:
+def _validate_out_is_none(out: Any | None) -> None:
+    if out is None:
+        return
+    msg = "MumPy accepts out=None for compatibility but does not support writable out= buffers"
+    raise TypeError(msg)
+
+
+def _unary_elementwise_op(x: Any, op: Any, *, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     arr = _asarray(x)
     with _cpu_default_device_for_dtype(arr.dtype):
         return op(arr)
 
 
-def _binary_elementwise_op(x1: Any, x2: Any, op: Any) -> mx.array:
+def _binary_elementwise_op(x1: Any, x2: Any, op: Any, *, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     a = _asarray(x1)
     b = _asarray(x2)
     with _cpu_default_device_for_dtypes(a.dtype, b.dtype):
@@ -1764,36 +1773,36 @@ def triu(m: Any, k: int = 0) -> mx.array:
     return _single_array_transform_op(m, mx.triu, k)
 
 
-def add(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.add)
+def add(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.add, out=out)
 
 
-def subtract(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.subtract)
+def subtract(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.subtract, out=out)
 
 
-def multiply(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.multiply)
+def multiply(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.multiply, out=out)
 
 
-def divide(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.divide)
+def divide(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.divide, out=out)
 
 
-def true_divide(x1: Any, x2: Any) -> mx.array:
-    return divide(x1, x2)
+def true_divide(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return divide(x1, x2, out=out)
 
 
-def floor_divide(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.floor_divide)
+def floor_divide(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.floor_divide, out=out)
 
 
-def remainder(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.remainder)
+def remainder(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.remainder, out=out)
 
 
-def mod(x1: Any, x2: Any) -> mx.array:
-    return remainder(x1, x2)
+def mod(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return remainder(x1, x2, out=out)
 
 
 def fmod(x1: Any, x2: Any) -> mx.array:
@@ -1806,12 +1815,12 @@ def divmod(x1: Any, x2: Any) -> tuple[mx.array, mx.array]:
     return floor_divide(x1, x2), remainder(x1, x2)
 
 
-def power(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.power)
+def power(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.power, out=out)
 
 
-def square(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.square)
+def square(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.square, out=out)
 
 
 def float_power(x1: Any, x2: Any) -> mx.array:
@@ -1820,60 +1829,61 @@ def float_power(x1: Any, x2: Any) -> mx.array:
         return power(asarray(x1, dtype=out_dtype), asarray(x2, dtype=out_dtype))
 
 
-def reciprocal(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.reciprocal)
+def reciprocal(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.reciprocal, out=out)
 
 
-def negative(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.negative)
+def negative(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.negative, out=out)
 
 
-def positive(x: Any) -> mx.array:
+def positive(x: Any, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     return _asarray(x)
 
 
-def abs(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.abs)
+def abs(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.abs, out=out)
 
 
-def absolute(x: Any) -> mx.array:
-    return abs(x)
+def absolute(x: Any, out: Any | None = None) -> mx.array:
+    return abs(x, out=out)
 
 
-def fabs(x: Any) -> mx.array:
-    return abs(x)
+def fabs(x: Any, out: Any | None = None) -> mx.array:
+    return abs(x, out=out)
 
 
-def sign(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.sign)
+def sign(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.sign, out=out)
 
 
-def exp(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.exp)
+def exp(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.exp, out=out)
 
 
 def exp2(x: Any) -> mx.array:
     return power(2.0, x)
 
 
-def expm1(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.expm1)
+def expm1(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.expm1, out=out)
 
 
-def log(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.log)
+def log(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.log, out=out)
 
 
-def log1p(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.log1p)
+def log1p(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.log1p, out=out)
 
 
-def log2(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.log2)
+def log2(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.log2, out=out)
 
 
-def log10(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.log10)
+def log10(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.log10, out=out)
 
 
 def logaddexp2(x1: Any, x2: Any) -> mx.array:
@@ -1883,24 +1893,24 @@ def logaddexp2(x1: Any, x2: Any) -> mx.array:
     return m + log2(exp2(a - m) + exp2(b - m))
 
 
-def sqrt(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.sqrt)
+def sqrt(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.sqrt, out=out)
 
 
-def rsqrt(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.rsqrt)
+def rsqrt(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.rsqrt, out=out)
 
 
-def sin(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.sin)
+def sin(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.sin, out=out)
 
 
-def cos(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.cos)
+def cos(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.cos, out=out)
 
 
-def tan(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.tan)
+def tan(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.tan, out=out)
 
 
 def asin(x: Any) -> mx.array:
@@ -1915,44 +1925,44 @@ def atan(x: Any) -> mx.array:
     return arctan(x)
 
 
-def arcsin(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.arcsin)
+def arcsin(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.arcsin, out=out)
 
 
-def arccos(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.arccos)
+def arccos(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.arccos, out=out)
 
 
-def arctan(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.arctan)
+def arctan(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.arctan, out=out)
 
 
-def acosh(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.arccosh)
+def acosh(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.arccosh, out=out)
 
 
-def asinh(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.arcsinh)
+def asinh(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.arcsinh, out=out)
 
 
-def atanh(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.arctanh)
+def atanh(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.arctanh, out=out)
 
 
-def atan2(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.arctan2)
+def atan2(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.arctan2, out=out)
 
 
-def sinh(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.sinh)
+def sinh(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.sinh, out=out)
 
 
-def cosh(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.cosh)
+def cosh(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.cosh, out=out)
 
 
-def tanh(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.tanh)
+def tanh(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.tanh, out=out)
 
 
 def sinc(x: Any) -> mx.array:
@@ -1961,36 +1971,37 @@ def sinc(x: Any) -> mx.array:
     return where(equal(arr, 0), 1.0, sin(pix) / pix)
 
 
-def degrees(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.degrees)
+def degrees(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.degrees, out=out)
 
 
-def radians(x: Any) -> mx.array:
-    return _unary_elementwise_op(x, mx.radians)
+def radians(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.radians, out=out)
 
 
-def deg2rad(x: Any) -> mx.array:
-    return radians(x)
+def deg2rad(x: Any, out: Any | None = None) -> mx.array:
+    return radians(x, out=out)
 
 
-def rad2deg(x: Any) -> mx.array:
-    return degrees(x)
+def rad2deg(x: Any, out: Any | None = None) -> mx.array:
+    return degrees(x, out=out)
 
 
-def floor(x: Any) -> mx.array:
-    return mx.floor(_asarray(x))
+def floor(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.floor, out=out)
 
 
-def ceil(x: Any) -> mx.array:
-    return mx.ceil(_asarray(x))
+def ceil(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.ceil, out=out)
 
 
-def round(a: Any, decimals: int = 0) -> mx.array:
+def round(a: Any, decimals: int = 0, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     return mx.round(_asarray(a), decimals)
 
 
-def around(a: Any, decimals: int = 0) -> mx.array:
-    return round(a, decimals=decimals)
+def around(a: Any, decimals: int = 0, out: Any | None = None) -> mx.array:
+    return round(a, decimals=decimals, out=out)
 
 
 def trunc(x: Any) -> mx.array:
@@ -2006,85 +2017,94 @@ def fix(x: Any) -> mx.array:
     return trunc(x)
 
 
-def maximum(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.maximum)
+def maximum(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.maximum, out=out)
 
 
-def minimum(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.minimum)
+def minimum(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.minimum, out=out)
 
 
-def fmax(x1: Any, x2: Any) -> mx.array:
+def fmax(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     a = _asarray(x1)
     b = _asarray(x2)
     return where(isnan(a), b, where(isnan(b), a, maximum(a, b)))
 
 
-def fmin(x1: Any, x2: Any) -> mx.array:
+def fmin(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     a = _asarray(x1)
     b = _asarray(x2)
     return where(isnan(a), b, where(isnan(b), a, minimum(a, b)))
 
 
-def equal(x1: Any, x2: Any) -> mx.array:
+def equal(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     a = _asarray(x1)
     b = _asarray(x2)
     with _cpu_default_device_for_dtypes(a.dtype, b.dtype):
         return mx.equal(a, b)
 
 
-def not_equal(x1: Any, x2: Any) -> mx.array:
+def not_equal(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     a = _asarray(x1)
     b = _asarray(x2)
     with _cpu_default_device_for_dtypes(a.dtype, b.dtype):
         return mx.not_equal(a, b)
 
 
-def greater(x1: Any, x2: Any) -> mx.array:
+def greater(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     a = _asarray(x1)
     b = _asarray(x2)
     with _cpu_default_device_for_dtypes(a.dtype, b.dtype):
         return mx.greater(a, b)
 
 
-def greater_equal(x1: Any, x2: Any) -> mx.array:
+def greater_equal(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     a = _asarray(x1)
     b = _asarray(x2)
     with _cpu_default_device_for_dtypes(a.dtype, b.dtype):
         return mx.greater_equal(a, b)
 
 
-def less(x1: Any, x2: Any) -> mx.array:
+def less(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     a = _asarray(x1)
     b = _asarray(x2)
     with _cpu_default_device_for_dtypes(a.dtype, b.dtype):
         return mx.less(a, b)
 
 
-def less_equal(x1: Any, x2: Any) -> mx.array:
+def less_equal(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     a = _asarray(x1)
     b = _asarray(x2)
     with _cpu_default_device_for_dtypes(a.dtype, b.dtype):
         return mx.less_equal(a, b)
 
 
-def logical_and(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.logical_and)
+def logical_and(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.logical_and, out=out)
 
 
-def logical_or(x1: Any, x2: Any) -> mx.array:
-    return _binary_elementwise_op(x1, x2, mx.logical_or)
+def logical_or(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    return _binary_elementwise_op(x1, x2, mx.logical_or, out=out)
 
 
-def logical_xor(x1: Any, x2: Any) -> mx.array:
+def logical_xor(x1: Any, x2: Any, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     a = _asarray(x1).astype(mx.bool_)
     b = _asarray(x2).astype(mx.bool_)
     with _cpu_default_device_for_dtypes(a.dtype, b.dtype):
         return mx.not_equal(a, b)
 
 
-def logical_not(x: Any) -> mx.array:
-    return mx.logical_not(_asarray(x))
+def logical_not(x: Any, out: Any | None = None) -> mx.array:
+    return _unary_elementwise_op(x, mx.logical_not, out=out)
 
 
 def bitwise_and(x1: Any, x2: Any) -> mx.array:
