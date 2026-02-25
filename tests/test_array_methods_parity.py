@@ -96,3 +96,15 @@ def test_view_matches_numpy_semantics() -> None:
     assert float32_view.dtype == mp.float32
     assert float32_view.shape == expected.shape
     assert_array_equal(float32_view, expected)
+
+
+def test_take_method_matches_top_level_take() -> None:
+    x = cast("mp.MumPyArray", mp.arange(12, dtype=mp.float64).reshape(3, 4))
+
+    taken_rows = x.take([0, 2], axis=0)
+    assert isinstance(taken_rows, mp.MumPyArray)
+    assert_array_equal(taken_rows, mp.take(x, indices=[0, 2], axis=0))
+
+    taken_flat = x.take([1, 5, 9])
+    assert isinstance(taken_flat, mp.MumPyArray)
+    assert_array_equal(taken_flat, mp.take(x, indices=[1, 5, 9]))

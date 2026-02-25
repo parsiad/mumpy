@@ -365,6 +365,9 @@ class MumPyArray(_MumPyValueBase):
             axes_arg = tuple(axes)
         return _call_mumpy_function("transpose", self, axes_arg)
 
+    def take(self, indices: Any, axis: int | None = None) -> Any:
+        return _call_mumpy_function("take", self, indices=indices, axis=axis)
+
 
 class MumPyScalar(_MumPyValueBase):
     """NumPy-scalar-like wrapper for scalar MumPy results."""
