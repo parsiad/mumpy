@@ -14,7 +14,7 @@ def assert_allclose(
     desired: Any,
     rtol: float = 1e-7,
     atol: float = 0.0,
-    equal_nan: bool = False,
+    equal_nan: bool = True,
     err_msg: str = "",
 ) -> None:
     np.testing.assert_allclose(
