@@ -151,6 +151,20 @@ _UNARY_OPERATOR_FUNCTIONS = {
     "__invert__": "bitwise_not",
 }
 
+_ARRAY_INPLACE_OPERATOR_DUNDERS = (
+    "__iadd__",
+    "__isub__",
+    "__imul__",
+    "__itruediv__",
+    "__ifloordiv__",
+    "__imod__",
+    "__ipow__",
+    "__imatmul__",
+    "__iand__",
+    "__ior__",
+    "__ixor__",
+)
+
 
 class MumPyAtIndexer:
     """Wrapper around MLX's immutable update indexer object."""
@@ -520,3 +534,13 @@ def _call_mumpy_function(name: str, *args: Any, **kwargs: Any) -> Any:
 
     fn = getattr(mp, name)
     return fn(*args, **kwargs)
+
+
+def _raise_immutable_inplace_update(self: Any, other: Any) -> Any:
+    del self, other
+    msg = "MumPyArray is immutable; use x = x + y or a functional update instead"
+    raise TypeError(msg)
+
+
+for _dunder in _ARRAY_INPLACE_OPERATOR_DUNDERS:
+    setattr(MumPyArray, _dunder, _raise_immutable_inplace_update)

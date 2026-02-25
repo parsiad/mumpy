@@ -1,5 +1,6 @@
 """Core behavior tests for ``MumPyArray``."""
 
+import operator
 from typing import cast
 
 import pytest
@@ -91,6 +92,29 @@ def test_array_wrapper_truthiness_matches_numpy_style() -> None:
 
     assert bool(mp.array([1])) is True
     assert bool(mp.array([0])) is False
+
+
+def test_array_wrapper_inplace_ops_raise() -> None:
+    x = mp.array([1.0, 2.0], dtype=mp.float64)
+    ints = mp.array([1, 2], dtype=mp.int64)
+    mat = mp.array([[1.0, 2.0], [3.0, 4.0]], dtype=mp.float64)
+    cases = (
+        (operator.iadd, x, 1.0),
+        (operator.isub, x, 1.0),
+        (operator.imul, x, 2.0),
+        (operator.itruediv, x, 2.0),
+        (operator.ifloordiv, ints, 2),
+        (operator.imod, ints, 2),
+        (operator.ipow, x, 2.0),
+        (operator.imatmul, mat, mat),
+        (operator.iand, ints, 1),
+        (operator.ior, ints, 1),
+        (operator.ixor, ints, 1),
+    )
+
+    for op, target, operand in cases:
+        with pytest.raises(TypeError, match="immutable"):
+            op(target, operand)
 
 
 def test_array_wrapper_at_indexer_wraps_results() -> None:

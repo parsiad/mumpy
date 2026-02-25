@@ -37,7 +37,8 @@ def test_scalar_wrapper_index_rejects_non_integer_dtypes() -> None:
     with pytest.raises(TypeError, match="cannot be interpreted as an integer index"):
         _ = s_float.__index__()
 
-    s_bool = MumPyScalar(mp.zeros((), dtype=mp.bool_) + 1)
+    bool_value = True
+    s_bool = MumPyScalar(mp.array(bool_value, dtype=mp.bool_))
     with pytest.raises(TypeError, match="cannot be interpreted as an integer index"):
         _ = s_bool.__index__()
 
