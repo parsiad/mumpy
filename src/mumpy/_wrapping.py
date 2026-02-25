@@ -368,6 +368,15 @@ class MumPyArray(_MumPyValueBase):
     def take(self, indices: Any, axis: int | None = None) -> Any:
         return _call_mumpy_function("take", self, indices=indices, axis=axis)
 
+    def setflags(self, write: bool | None = None, align: bool | None = None, uic: bool | None = None) -> None:
+        if write in (None, False) and align is None and uic is None:
+            return None
+        if write is True:
+            msg = "MumPyArray is immutable; writeable flag cannot be set to True"
+            raise ValueError(msg)
+        msg = "MumPyArray.setflags only supports the compatibility no-op setflags(write=False)"
+        raise NotImplementedError(msg)
+
 
 class MumPyScalar(_MumPyValueBase):
     """NumPy-scalar-like wrapper for scalar MumPy results."""

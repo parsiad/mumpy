@@ -125,6 +125,18 @@ def test_array_wrapper_at_indexer_wraps_results() -> None:
     assert_array_equal(y, [1.0, 9.0, 3.0])
 
 
+def test_array_wrapper_setflags_supports_write_false_only() -> None:
+    x = mp.array([1.0, 2.0], dtype=mp.float64)
+
+    assert x.setflags(write=False) is None
+
+    with pytest.raises(ValueError, match="writeable flag"):
+        x.setflags(write=True)
+
+    with pytest.raises(NotImplementedError, match="write=False"):
+        x.setflags(align=True)
+
+
 def test_array_wrapper_repr_str_and_tolist() -> None:
     x = mp.array([[1, 2], [3, 4]])
 
