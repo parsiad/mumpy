@@ -370,7 +370,7 @@ class MumPyArray(_MumPyValueBase):
 
     def setflags(self, write: bool | None = None, align: bool | None = None, uic: bool | None = None) -> None:
         if write in (None, False) and align is None and uic is None:
-            return None
+            return
         if write is True:
             msg = "MumPyArray is immutable; writeable flag cannot be set to True"
             raise ValueError(msg)
