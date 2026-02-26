@@ -396,6 +396,10 @@ def test_out_none_is_accepted_for_ufunc_style_core_functions() -> None:
     assert_allclose(mp.add(x, y, out=None), np.add(np.asarray(x), np.asarray(y)))
     assert_allclose(mp.divide(y, x, out=None), np.divide(np.asarray(y), np.asarray(x)))
     assert_allclose(mp.sin(x, out=None), np.sin(np.asarray(x)))
+    assert_allclose(mp.clip(x, 1.5, 3.0, out=None), np.clip(np.asarray(x), 1.5, 3.0))
 
     with pytest.raises(TypeError, match="out=None"):
         mp.divide(y, x, out=mp.zeros_like(x))
+
+    with pytest.raises(TypeError, match="out=None"):
+        mp.clip(x, 1.5, 3.0, out=mp.zeros_like(x))

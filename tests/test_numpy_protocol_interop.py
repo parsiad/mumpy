@@ -53,3 +53,12 @@ def test_numpy_ufuncs_allow_out_none_but_reject_real_out_buffers() -> None:
 
     with pytest.raises(TypeError):
         np.add(x, 1.5, out=np.empty(3, dtype=np.float64))
+
+
+def test_numpy_clip_allows_out_none() -> None:
+    x = mp.array([-1.0, 0.5, 3.0])
+
+    out_none = np.clip(x, 0.0, 1.0, out=None)
+
+    assert isinstance(out_none, mp.MumPyArray)
+    assert_array_equal(out_none, [0.0, 0.5, 1.0])

@@ -1578,7 +1578,8 @@ def piecewise(x: Any, condlist: Sequence[Any], funclist: Sequence[Any], *args: A
         return _numpy_wrap_value(np_result)
 
 
-def clip(a: Any, a_min: Any, a_max: Any) -> mx.array:
+def clip(a: Any, a_min: Any, a_max: Any, out: Any | None = None) -> mx.array:
+    _validate_out_is_none(out)
     return _single_array_transform_op(a, mx.clip, a_min, a_max)
 
 
