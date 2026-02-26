@@ -426,6 +426,9 @@ class MumPyScalar(_MumPyValueBase):
     def view(self, dtype: Any | None = None, type: Any | None = None) -> Any:
         return _call_mumpy_function("view", self, dtype=dtype, type=type)
 
+    def setflags(self, write: bool | None = None, align: bool | None = None, uic: bool | None = None) -> None:
+        del write, align, uic
+
     def __hash__(self) -> int:
         return hash(self._mx.item())
 

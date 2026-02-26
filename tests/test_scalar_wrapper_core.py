@@ -71,3 +71,13 @@ def test_scalar_wrapper_view_matches_numpy_semantics() -> None:
     assert isinstance(int64_view, mp.MumPyScalar)
     assert int64_view.dtype == mp.int64
     assert int64_view.item() == expected.item()
+
+
+def test_scalar_wrapper_setflags_matches_numpy_noop_behavior() -> None:
+    s = mp.sum(mp.array([1.0, 2.0, 3.0], dtype=mp.float64))
+
+    assert s.setflags() is None
+    assert s.setflags(write=False) is None
+    assert s.setflags(write=True) is None
+    assert s.setflags(align=True) is None
+    assert s.setflags(uic=True) is None
