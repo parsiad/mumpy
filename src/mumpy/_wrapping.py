@@ -59,6 +59,7 @@ _SCALAR_RESULT_NAMES = {
     "vector_norm",
     "matrix_norm",
     "float_power",
+    "view",
     "add",
     "subtract",
     "multiply",
@@ -421,6 +422,9 @@ class MumPyScalar(_MumPyValueBase):
 
     def __complex__(self) -> complex:
         return complex(self._mx.item())
+
+    def view(self, dtype: Any | None = None, type: Any | None = None) -> Any:
+        return _call_mumpy_function("view", self, dtype=dtype, type=type)
 
     def __hash__(self) -> int:
         return hash(self._mx.item())

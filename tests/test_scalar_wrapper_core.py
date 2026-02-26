@@ -1,5 +1,6 @@
 """Core behavior tests for ``MumPyScalar``."""
 
+import numpy as np
 import pytest
 
 import mumpy as mp
@@ -53,3 +54,20 @@ def test_scalar_wrapper_repr_is_informative() -> None:
 
     assert "MumPyScalar(" in repr(s)
     assert "int32" in repr(s)
+
+
+def test_scalar_wrapper_view_matches_numpy_semantics() -> None:
+    s = mp.sum(mp.array([1.0, 2.0, 3.0], dtype=mp.float64))
+
+    same_view = s.view()
+    assert isinstance(same_view, mp.MumPyScalar)
+    assert same_view is not s
+    assert same_view.mx is s.mx
+    assert same_view.dtype == s.dtype
+    assert same_view.item() == s.item()
+
+    int64_view = s.view(mp.int64)
+    expected = np.asarray(s).view(np.int64)
+    assert isinstance(int64_view, mp.MumPyScalar)
+    assert int64_view.dtype == mp.int64
+    assert int64_view.item() == expected.item()
